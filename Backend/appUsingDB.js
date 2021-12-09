@@ -3,9 +3,11 @@ const app = express();
 const bodyParser = require('body-parser');
 const { application } = require("express");
 const connection = require('./database/connection');
+const cors = require('cors');
 
 const gamesModel = require('./models/gamesModel');
 
+app.use(cors()); //Para liberar o acesso externo ao consumo da API
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
