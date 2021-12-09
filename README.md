@@ -19,6 +19,7 @@ Run `npm i` in the root folder to install all packages.
 Make sure you have MySQL installed in your computer and change the `database/connection.js` file with your authentication.
 
 Then run `nodemon appUsingDB.js` to run the application.
-(You can run the `appUsingArrayAsDB.js` if you want use a simulated database as an array instead of MySQL)
 
-The server will run in the URL `http://localhost:3000/`.
+The server backend will run in the URL `http://localhost:3000/`
+
+Open the `Frontend/index.html` to see the API being consumed.

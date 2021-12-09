@@ -4,8 +4,12 @@ const bodyParser = require('body-parser');
 const { application } = require("express");
 const connection = require('./database/connection');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 
 const gamesModel = require('./models/gamesModel');
+const usersModel = require('./models/usersModel');
+
+const Auth = require('./middleware/auth');
 
 app.use(cors()); //Para liberar o acesso externo ao consumo da API
 app.use(bodyParser.urlencoded({extended: false}));
@@ -18,11 +22,53 @@ connection.authenticate().then(() => {
     console.log(err);
 })
 
+const JWTSecret = require("./JWTSecret");
+
+// JWT Auth
+app.post("/auth", (req, res) => {
+    var { email, password } = req.body;
+
+    if(email != undefined){
+        usersModel.findOne({ where: {email: email}}).then(user => {
+            if(user != undefined) {
+                if(user.password == password){
+
+                    jwt.sign({id: user.id, email: user.email}, JWTSecret, {expiresIn: '48h'}, (err, token) => {
+                        if(err){
+                            res.statusCode = 400;
+                            res.json({err: "Falha interna."});
+                        }
+                        else {
+                            res.statusCode = 200;
+                            res.json({token: token});
+                        }
+                    })
+                }
+                else{
+                    res.statusCode = 401;
+                    res.json({err: "Credenciais inválidas!"})
+                }
+            }
+            else{
+                res.statusCode = 400;
+                res.json({err: "Email não encontrado"});
+            }
+        }).catch(err => {
+            res.statusCode = 500;
+            res.json({err: err});
+        })
+    }
+    else{
+        res.statusCode = 400;
+        res.json({err: "Email inválido!"});
+    }
+})
+
 
 
 // API REST
 
-app.get('/games', (req, res) => {
+app.get('/games', Auth, (req, res) => {
     gamesModel.findAll().then(games => {
         res.statusCode = 200;
         res.json(games);
@@ -32,7 +78,7 @@ app.get('/games', (req, res) => {
     })
 });
 
-app.get("/game/:id", (req, res) => {
+app.get("/game/:id", Auth, (req, res) => {
     if(isNaN(req.params.id))
         res.sendStatus(400);
     else {
@@ -51,7 +97,7 @@ app.get("/game/:id", (req, res) => {
     }
 });
 
-app.post("/game", (req, res) => {
+app.post("/game", Auth, (req, res) => {
     var { title, price, year } = req.body;
 
     if (title == undefined || !title || isNaN(price) || !price || isNaN(year) || !year)
@@ -65,7 +111,7 @@ app.post("/game", (req, res) => {
     })
 });
 
-app.delete("/game/:id", (req, res) => {
+app.delete("/game/:id", Auth, (req, res) => {
     if(isNaN(req.params.id))
         res.sendStatus(400);
     else {
@@ -79,7 +125,7 @@ app.delete("/game/:id", (req, res) => {
     }
 });
 
-app.put("/game/:id", (req, res) => {
+app.put("/game/:id", Auth, (req, res) => {
     if(isNaN(req.params.id))
         res.sendStatus(400);
     else {
