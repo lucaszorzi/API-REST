@@ -69,9 +69,28 @@ app.post("/auth", (req, res) => {
 // API REST
 
 app.get('/games', Auth, (req, res) => {
+
+    var HATEOAS = [
+        {
+            href: "http://localhost:3000/game/0",
+            method: "DELETE",
+            rel: "delete_game"
+        },
+        {
+            href: "http://localhost:3000/game/0",
+            method: "GET",
+            rel: "get_game"
+        },
+        {
+            href:"http://localhost:3000/auth",
+            method: "POST",
+            rel: "login"
+        }
+    ]
+
     gamesModel.findAll().then(games => {
         res.statusCode = 200;
-        res.json(games);
+        res.json({games: games, _links: HATEOAS});
     }).catch(err => {
         console.error(err);
         res.sendStatus(err);
@@ -86,7 +105,31 @@ app.get("/game/:id", Auth, (req, res) => {
         gamesModel.findOne({ where: {id: id}}).then(game => {
             if(game != undefined){
                 res.statusCode = 200;
-                res.json(game);
+
+                var HATEOAS = [
+                    {
+                        href: "http://localhost:3000/game/"+id,
+                        method: "DELETE",
+                        rel: "delete_game"
+                    },
+                    {
+                        href: "http://localhost:3000/game/"+id,
+                        method: "GET",
+                        rel: "get_game"
+                    },
+                    {
+                        href:"http://localhost:3000/game/"+id,
+                        method: "PUT",
+                        rel: "edit_game"
+                    },
+                    {
+                        href:"http://localhost:3000/auth",
+                        method: "POST",
+                        rel: "login"
+                    }
+                ]
+
+                res.json({game, _links: HATEOAS});
             }
             else
                 res.sendStatus(404);
